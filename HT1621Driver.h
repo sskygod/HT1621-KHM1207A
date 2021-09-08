@@ -12,6 +12,7 @@ enum com {
 }
 
 extern void initialize();
+extern void deinitialize();
 
 extern void set_lcd_off();
 extern void set_lcd_on();

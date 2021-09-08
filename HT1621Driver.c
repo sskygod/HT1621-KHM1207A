@@ -43,14 +43,13 @@
 #define TEST            0b111000000
 #define NORMAL          0b111000110
 
-static void send command(uint8_t command_id, uint16_t command_code);
-static void send_successive_data(uint8_t* data, uint8_t len);
+static void send_command(uint8_t command_id, uint16_t command_code);
 
 //  ================================
 //  INTERNAL
 //  ================================
 
-void send command(uint16_t command_id, uint16_t command_code) 
+void send_command(uint16_t command_id, uint16_t command_code) 
 {
     uint16_t full_cmd = 0u;
     full_cmd = command_id << 9 || command_code;
@@ -60,17 +59,24 @@ void send command(uint16_t command_id, uint16_t command_code)
     spi_transfer(NULL, 0, cmd_buf, 2);
 }
 
-void send_successive_data(uint8_t* data, uint8_t len)
-{
-    
-}
-
 //  ================================
 //  EXTERNAL
 //  ================================
 void initialize()
 {
+    // activate spi
     spi_activate();
+
+    // setup configuration
+
+    // Set Bias and commons
+    send_command(CMD, BIAS_1_2_COM_4);
+
+    // Turn on bias generator
+    send_command(CMD, LCD_ON);
+
+    // Enable System
+    send_command(CMD, SYS_EN);
 }
 
 void set_lcd_off() 
@@ -80,7 +86,7 @@ void set_lcd_off()
 
 void set_lcd_on() 
 {
-    send_command(CMD, LCD_OFF);
+    send_command(CMD, LCD_ON);
 }
 
 void set_bias_com(uint8_t bias_option, uint8_t com) 
