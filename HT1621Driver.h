@@ -1,5 +1,4 @@
 #include <stdint.h>
-#include "SPI_HAL.h"
 
 /* Command ID List */
 #define READ            0b110
@@ -47,15 +46,18 @@ class HT1621
 {
     public:
         HT1621();
-        HT1621(SPI_HAL spi_handler);
+        HT1621(uint8_t cs_pin, uint8_t wr_pin, uint8_t data_pin);
 
         void send_cmd(uint16_t command_code);
         void send_data(uint8_t segment, uint8_t val);
-        void update();
+        void clear_ram(void);
 
     private:
-        SPI_HAL spi;
+        uint8_t cs_pin_def;
+        uint8_t wr_pin_def;
+        uint8_t data_pin_def;
 
+        void send(uint16_t data, uint8_t len);
         void config();
 
 };

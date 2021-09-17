@@ -1,44 +1,91 @@
 #include "HT1621Driver.h"
 
-#define CMD_CODE_BIT_LOCATION   9u
-#define ADDR_BIT_LOCATION       4u
+#define START_SEGMENT       0x00
+#define END_SEGMENT         0x1F
 
-#define CMD_CODE_BIT_MASK       0x1C00
-#define ADDR_BIT_MASK           0x03F0
-#define DATA_BIT_MASK           0x000F
+#define BLANK               0x00
+
+/* Send length */
+#define COMMAND_ID_LEN      3u
+#define COMMAND_CODE_LEN    9u
+#define ADDRESS_LEN         6u
+#define DATA_LEN            8u      // Send Successive for two addresses
+#define ALL_DATA_LEN        128u    // 32 segment * 4 bit
 
 HT1621::HT1621()
 {
     
 }
 
-HT1621::HT1621(SPI_HAL spi_handler)
+HT1621::HT1621(uint8_t cs_pin, uint8_t wr_pin, uint8_t data_pin)
 {
-    spi = spi_handler;
+    cs_pin_def = cs_pin;
+    wr_pin_def = wr_pin;
+    data_pin_def = data_pin;
+
+    pinMode(cs_pin_def, OUTPUT);
+	pinMode(wr_pin_def, OUTPUT);
+	pinMode(data_pin_def, OUTPUT);
 
     HT1621();
 }
 
 void HT1621::send_cmd(uint16_t command_code) 
 {
-    uint16_t full_cmd = 0u;
-    full_cmd = CMD << 9 || command_code;
+    digitalWrite(cs_pin_def, LOW);
 
-    uint8_t* cmd_buf = (uint8_t*) &full_cmd;
-    const uint8_t cmd_buf_len = 2u;
+    send(CMD, COMMAND_ID_LEN);
+    send(command_code, COMMAND_CODE_LEN);
 
-    spi.transfer(NULL, 0, cmd_buf, cmd_buf_len);
+    digitalWrite(cs_pin_def, HIGH);
 }
 
 void HT1621::send_data(uint8_t segment, uint8_t val)
 {
-    uint16_t full_cmd = 0u;
-    full_cmd = (((uint16_t)WRITE << CMD_CODE_BIT_LOCATION) & CMD_CODE_BIT_MASK) | 
-                (((uint16_t)segment << ADDR_BIT_LOCATION) & ADDR_BIT_MASK) |
-                ((uint16_t)val & DATA_BIT_MASK);
+    digitalWrite(cs_pin_def, LOW);
 
-    uint8_t* cmd_buf = (uint8_t*) &full_cmd;
-    const uint8_t cmd_buf_len = 2u;
+    send(WRITE, COMMAND_ID_LEN);
+    send(segment, ADDRESS_LEN);
+    send(val, DATA_LEN);
 
-    spi.transfer(NULL, 0, cmd_buf, cmd_buf_len);
+    digitalWrite(cs_pin_def, HIGH);
+}
+
+void HT1621::clear_ram(void)
+{
+    digitalWrite(cs_pin_def, LOW);
+
+    send(WRITE, COMMAND_ID_LEN);
+    send(START_SEGMENT, ADDRESS_LEN);
+
+    for (uint8_t i = START_SEGMENT; i <= END_SEGMENT; i++)
+    {
+        send(BLANK, DATA_LEN);
+    }
+
+    digitalWrite(cs_pin_def, HIGH);
+}
+
+void HT1621::send(uint16_t data, uint8_t len)
+{
+    data <<= (16u - len);
+
+    for (uint8_t i = 0u; i < len; i++)
+    {
+        digitalWrite(wr_pin_def, LOW);
+		delayMicroseconds(4);
+
+		if (data & 0x8000) {
+			digitalWrite(data_pin_def, HIGH);
+		}
+		else
+		{
+			digitalWrite(data_pin_def, LOW);
+		}
+
+		digitalWrite(wr_pin_def, HIGH);
+		delayMicroseconds(4);
+
+		data <<= 1;
+    }
 }
