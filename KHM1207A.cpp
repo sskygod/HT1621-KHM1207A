@@ -105,19 +105,21 @@ bool KHM1207::set_dot(uint8_t location, bool state)
         return false;
     }
 
+    uint8_t dot_location = location + 1;
+
     if (state == true)
     {
-        buffer[location + 1] |= 0b00010000;
+        buffer[dot_location] |= 0b00010000;
     }
     else
     {
-        buffer[location + 1] &= 0b11101111;
+        buffer[dot_location] &= 0b11101111;
     }
 
     // set segment
-    uint8_t segment = location * 2u;
+    uint8_t segment = dot_location * 2u;
 
-    HT1621_driver.send_data(segment, buffer[location + 1]);
+    HT1621_driver.send_data(segment, buffer[dot_location]);
 
     return true;
 }
