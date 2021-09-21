@@ -2,7 +2,10 @@
 #include "KHM1207A.h"
 #include "HT1621Driver.h"
 
-#define BLANK_NUM   0x00
+#define FIRST_SEGMENT   0x00
+#define LAST_SEGMENT    0x1F
+
+#define BLANK_DIGIT     0x00
 
 /* Number decode */
 uint8_t number_map[10] = {
@@ -59,11 +62,17 @@ bool KHM1207::set_number(uint16_t value)
     remainder %= 10;
     buffer[3] = remainder;
 
-    // convert to digit code
-    for (uint8_t i = 0u; i < 4u; i++)
+    // clear before update new data
+    HT1621_driver.clear_ram();
+
+    // encode
+    for (uint8_t i = 0u; i < BUFFER_LEN; i++)
     {
         buffer[i] = number_map[buffer[i]];
     }
+
+    // send bulk
+    HT1621_driver.send_successive_data(FIRST_SEGMENT, buffer, BUFFER_LEN);
 
     return true;
 }
@@ -75,8 +84,16 @@ bool KHM1207::set_digit(uint8_t location, uint8_t value)
         return false;
     }
 
-    // convert to digit code then store
-    buffer[location] = number_map[value];
+    // Get current state of Dot or Colon
+    uint8_t dot_colon = buffer[location] & 0b00010000;
+
+    // convert to digit code then store (including previous state Dot or Colon)
+    buffer[location] = dot_colon | number_map[value];
+
+    // set segment
+    uint8_t segment = location * 2u;
+
+    HT1621_driver.send_data(segment, buffer[location]);
 
     return true;
 }
@@ -97,11 +114,18 @@ bool KHM1207::set_dot(uint8_t location, bool state)
         buffer[location + 1] &= 0b11101111;
     }
 
+    // set segment
+    uint8_t segment = location * 2u;
+
+    HT1621_driver.send_data(segment, buffer[location + 1]);
+
     return true;
 }
 
 void KHM1207::set_colon(bool state)
 {
+    const uint8_t segment = 0u;
+
     if (state == true)
     {
         buffer[0] |= 0b00010000;
@@ -109,20 +133,8 @@ void KHM1207::set_colon(bool state)
     else
     {
         buffer[0] &= 0b11101111;
-    }
+    }   
+
+    HT1621_driver.send_data(segment, buffer[0]);
 }
 
-void KHM1207::update(void)
-{
-    uint8_t segment = 0u;
-
-    // clear before update new data
-    HT1621_driver.clear_ram();
-
-    for (uint8_t location = 0u; location < 4u; location++)
-    {
-        segment = location * 2u;
-
-        HT1621_driver.send_data(segment, buffer[location]);
-    }
-}

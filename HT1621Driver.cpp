@@ -51,6 +51,21 @@ void HT1621::send_data(uint8_t segment, uint8_t val)
     digitalWrite(cs_pin_def, HIGH);
 }
 
+void HT1621::send_successive_data(uint8_t start_segment, uint8_t* bulk_val, uint8_t len)
+{
+    digitalWrite(cs_pin_def, LOW);
+
+    send(WRITE, COMMAND_ID_LEN);
+    send(start_segment, ADDRESS_LEN);
+
+    for (uint8_t i = 0u; i < len; i++)
+    {
+        send(bulk_val[i], DATA_LEN);
+    }    
+
+    digitalWrite(cs_pin_def, HIGH);
+}
+
 void HT1621::clear_ram(void)
 {
     digitalWrite(cs_pin_def, LOW);

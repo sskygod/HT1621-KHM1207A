@@ -3,6 +3,8 @@
 #ifndef KHM1207A_H
 #define KHM1207A_H
 
+#define BUFFER_LEN      4u
+
 class KHM1207
 {
     public:
@@ -13,10 +15,8 @@ class KHM1207
         bool set_dot(uint8_t location, bool state);
         void set_colon(bool state);
 
-        void update(void);
-
     private:
-        uint8_t buffer[4];
+        uint8_t buffer[BUFFER_LEN];
 };
 
 #endif /* KHM1207A_H */

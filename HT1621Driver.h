@@ -50,6 +50,7 @@ class HT1621
 
         void send_cmd(uint16_t command_code);
         void send_data(uint8_t segment, uint8_t val);
+        void send_successive_data(uint8_t start_segment, uint8_t* bulk_val, uint8_t len);
         void clear_ram(void);
 
     private:
