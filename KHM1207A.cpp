@@ -38,50 +38,91 @@ KHM1207::KHM1207()
     // Enable system again
     HT1621_driver.send_cmd(SYS_EN);
     // Turn on LCD bias generator
-    HT1621_driver.send_cmd(LCD_ON);    
+    HT1621_driver.send_cmd(LCD_ON);
 }
 
-void KHM1207::run_demo(void)
+bool KHM1207::set_number(uint16_t value)
 {
-    /*
-    clear();
+    if (value > 9999) 
+    {
+        return false;
+    }
 
-    HT1621_driver.send_data(0x00, 0b1000);
+    buffer[0] = value / 1000;
 
-    delay(2000);
+    uint16_t remainder = value % 1000;
+    buffer[1] = remainder / 100;
 
-    clear();
+    remainder %= 100;
+    buffer[2] = remainder / 10;
 
-    HT1621_driver.send_data(0x00, 0b0100);
+    remainder %= 10;
+    buffer[3] = remainder;
 
-    delay(2000);
+    // convert to digit code
+    for (uint8_t i = 0u; i < 4u; i++)
+    {
+        buffer[i] = number_map[buffer[i]];
+    }
 
-    clear();
+    return true;
+}
 
-    HT1621_driver.send_data(0x00, 0b0010);
+bool KHM1207::set_digit(uint8_t location, uint8_t value)
+{
+    if (location > 4 || value > 9)
+    {
+        return false;
+    }
 
-    delay(2000);
+    // convert to digit code then store
+    buffer[location] = number_map[value];
 
-    clear();
+    return true;
+}
 
-    HT1621_driver.send_data(0x00, 0b0001);
-    */
+bool KHM1207::set_dot(uint8_t location, bool state)
+{
+    if (location > 3)
+    {
+        return false;
+    }
+
+    if (state == true)
+    {
+        buffer[location + 1] |= 0b00010000;
+    }
+    else
+    {
+        buffer[location + 1] &= 0b11101111;
+    }
+
+    return true;
+}
+
+void KHM1207::set_colon(bool state)
+{
+    if (state == true)
+    {
+        buffer[0] |= 0b00010000;
+    }
+    else
+    {
+        buffer[0] &= 0b11101111;
+    }
+}
+
+void KHM1207::update(void)
+{
+    uint8_t segment = 0u;
+
+    // clear before update new data
     HT1621_driver.clear_ram();
 
-    set_number(5, 0);
-    set_number(6, 1);
-    set_number(7, 2);
-    set_number(8, 3);
-}
+    for (uint8_t location = 0u; location < 4u; location++)
+    {
+        segment = location * 2u;
 
-void KHM1207::set_number(uint8_t value, uint8_t location)
-{
-    uint8_t segment = location * 2u;
-
-    HT1621_driver.send_data(segment, number_map[value]);
-}
-
-void KHM1207::set_dot(uint8_t location)
-{
-
+        HT1621_driver.send_data(segment, buffer[location]);
+    }
 }

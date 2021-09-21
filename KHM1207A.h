@@ -7,12 +7,16 @@ class KHM1207
 {
     public:
         KHM1207();
-        void run_demo(void);
-        void print(float number);
+
+        bool set_number(uint16_t value);
+        bool set_digit(uint8_t location, uint8_t value);
+        bool set_dot(uint8_t location, bool state);
+        void set_colon(bool state);
+
+        void update(void);
 
     private:
-        void set_number(uint8_t value, uint8_t location);
-        void set_dot(uint8_t location);
+        uint8_t buffer[4];
 };
 
 #endif /* KHM1207A_H */
