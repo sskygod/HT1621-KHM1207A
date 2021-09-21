@@ -11,5 +11,8 @@ void setup()
 
 void loop()
 {
-
+    delay(1000);
+    lcd.set_colon(false);
+    delay(1000);
+    lcd.set_colon(true);
 }
