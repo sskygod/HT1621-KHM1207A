@@ -1,5 +1,8 @@
 #include <stdint.h>
 
+#ifndef HT1621DRIVER_H
+#define HT1621DRIVER_H
+
 /* Command ID List */
 #define READ            0b110
 #define WRITE           0b101
@@ -42,15 +45,57 @@
 #define TEST            0b111000000
 #define NORMAL          0b111000110
 
+/**
+ * @brief class for HT1621 driver
+ * 
+ */
 class HT1621
 {
     public:
+        /**
+         * @brief Construct a new HT1621 object with default pins
+         * 
+         */
         HT1621();
+
+        /**
+         * @brief Construct a new HT1621 object with specific pins
+         * 
+         * @param cs_pin 
+         * @param wr_pin 
+         * @param data_pin 
+         */
         HT1621(uint8_t cs_pin, uint8_t wr_pin, uint8_t data_pin);
 
+
+        /**
+         * @brief send command to chip HT1621
+         * 
+         * @param command_code 
+         */
         void send_cmd(uint16_t command_code);
+
+        /**
+         * @brief send data to chip HT1621
+         * 
+         * @param segment 
+         * @param val 
+         */
         void send_data(uint8_t segment, uint8_t val);
+
+        /**
+         * @brief send data continuously, only need start address
+         * 
+         * @param start_segment 
+         * @param bulk_val 
+         * @param len 
+         */
         void send_successive_data(uint8_t start_segment, uint8_t* bulk_val, uint8_t len);
+
+        /**
+         * @brief clear the whole memory
+         * 
+         */
         void clear_ram(void);
 
     private:
@@ -58,7 +103,13 @@ class HT1621
         uint8_t wr_pin_def;
         uint8_t data_pin_def;
 
+        /**
+         * @brief Universal send function, send command as well as data
+         * 
+         * @param data 
+         * @param len 
+         */
         void send(uint16_t data, uint8_t len);
-        void config();
-
 };
+
+#endif /* HT1621DRIVER_H */
